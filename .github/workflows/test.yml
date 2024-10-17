@@ -17,9 +17,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          ls -l ~/.ssh/id_rsa 
           ssh-keyscan -H ec2-18-156-198-173.eu-central-1.compute.amazonaws.com >> ~/.ssh/known_hosts
+
+      - name: Verify SSH key
+        run: |
+          head -n 5 ~/.ssh/id_rsa
 
       - name: SSH into EC2 and run a command
         run: |
           ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-156-198-173.eu-central-1.compute.amazonaws.com 'echo "Hello from GitHub Actions on PR event" > ~/github_actions_output.txt'
-
