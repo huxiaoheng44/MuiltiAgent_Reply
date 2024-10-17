@@ -1,0 +1,25 @@
+name: Trigger SSH on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ec2-18-156-198-173.eu-central-1.compute.amazonaws.com >> ~/.ssh/known_hosts
+
+      - name: SSH into EC2 and run a command
+        run: |
+          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-156-198-173.eu-central-1.compute.amazonaws.com 'echo "Hello from GitHub Actions on PR event" > ~/github_actions_output.txt'
+
