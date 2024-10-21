@@ -17,7 +17,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ec2-18-156-198-173.eu-central-1.compute.amazonaws.com >> ~/.ssh/known_hosts
+          ssh-keyscan -H ec2-18-159-248-60.eu-central-1.compute.amazonaws.com >> ~/.ssh/known_hosts
 
       - name: Get PR changed files
         run: |
@@ -25,10 +25,19 @@ jobs:
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files > pr_files.json
 
+      - name: Add repo name and commit id to the JSON
+        run: |
+          COMMIT_ID="${{ github.event.pull_request.head.sha }}"
+          REPO_NAME="${{ github.repository }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          # Create a new JSON file that includes repo name, commit ID, and the PR files
+          jq '. + {repo_name: "'${REPO_NAME}'", commit_id: "'${COMMIT_ID}'", pr_number: "'${PR_NUMBER}'"}' pr_files.json > pr_data.json
+
       - name: Copy PR files to EC2
         run: |
-          scp -i ~/.ssh/id_rsa pr_files.json ec2-user@ec2-18-156-198-173.eu-central-1.compute.amazonaws.com:/home/ec2-user/pr_files_${{ github.event.pull_request.number }}.json
+          scp -i ~/.ssh/id_rsa pr_data.json ec2-user@ec2-18-159-248-60.eu-central-1.compute.amazonaws.com:/home/ec2-user/xiao/pr_data_${{ github.event.pull_request.number }}.json
 
       - name: Log into EC2 and check PR files
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-156-198-173.eu-central-1.compute.amazonaws.com "cat /home/ec2-user/pr_files_${{ github.event.pull_request.number }}.json"
+          ssh -i ~/.ssh/id_rsa ec2-user@ec2-18-159-248-60.eu-central-1.compute.amazonaws.com "cat /home/ec2-user/xiao/pr_data_${{ github.event.pull_request.number }}.json"
