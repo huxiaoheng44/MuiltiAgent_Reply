@@ -31,8 +31,13 @@ jobs:
           REPO_NAME="${{ github.repository }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
 
-          # Create a new JSON file that includes repo name, commit ID, and the PR files
-          jq '. + {repo_name: "'${REPO_NAME}'", commit_id: "'${COMMIT_ID}'", pr_number: "'${PR_NUMBER}'"}' pr_files.json > pr_data.json
+          # create a new JSON file that includes repo name, commit ID, and the PR files
+          jq -n \
+            --arg repo_name "$REPO_NAME" \
+            --arg commit_id "$COMMIT_ID" \
+            --arg pr_number "$PR_NUMBER" \
+            --slurpfile pr_files pr_files.json \
+            '{repo_name: $repo_name, commit_id: $commit_id, pr_number: $pr_number, pr_files: $pr_files}' > pr_data.json
 
       - name: Copy PR files to EC2
         run: |
